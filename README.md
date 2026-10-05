@@ -1,6 +1,123 @@
 
 Ressources: Perplexe, doc.databricks
-**Ingesting data with the Auto Loader**
+
+# Spark Structured Streaming vs Auto Loader
+
+La différence principale est que **Spark Structured Streaming est le moteur de traitement**, tandis qu’**Auto Loader est une source d’ingestion spécialisée de Databricks**, conçue pour détecter et charger efficacement les nouveaux fichiers depuis un stockage cloud. Auto Loader fonctionne donc généralement **au-dessus de Spark Structured Streaming**. citeturn0search0
+
+## Comparaison
+
+| Aspect | Spark Structured Streaming | Auto Loader |
+|---|---|---|
+| Rôle | Traiter des données en continu ou par micro-lots | Ingérer les nouveaux fichiers déposés dans un stockage cloud |
+| Sources | Kafka, fichiers, Delta Lake, rate, sockets, etc. | Principalement fichiers dans S3, ADLS, GCS ou stockage cloud compatible |
+| Détection des fichiers | Utilise la source fichier classique de Spark | Utilise la source `cloudFiles`, optimisée pour la découverte des fichiers |
+| Passage à l’échelle | Correct pour un volume modéré de fichiers | Adapté à des millions ou milliards de fichiers |
+| Évolution du schéma | À gérer davantage manuellement | Inférence, évolution et récupération du schéma intégrées |
+| Suivi des fichiers traités | Via les mécanismes de checkpoint de Structured Streaming | Checkpoint et métadonnées spécifiques pour éviter de retraiter les fichiers |
+| Produit | Fonctionnalité Apache Spark | Fonctionnalité Databricks |
+
+## Spark Structured Streaming
+
+Avec Spark, on peut lire progressivement les nouveaux fichiers ainsi :
+
+```python
+df = (
+    spark.readStream
+         .format("json")
+         .schema(schema)
+         .load("/mnt/landing")
+)
+```
+
+Spark surveille le répertoire et traite les nouveaux fichiers. Cette approche est suffisante lorsque le volume de fichiers et la complexité de l’arborescence restent raisonnables.
+
+Spark Structured Streaming permet également de consommer d’autres sources, par exemple Kafka :
+
+```python
+df = (
+    spark.readStream
+         .format("kafka")
+         .option("kafka.bootstrap.servers", "...")
+         .option("subscribe", "events")
+         .load()
+)
+```
+
+## Auto Loader
+
+Auto Loader utilise la source `cloudFiles` :
+
+```python
+df = (
+    spark.readStream
+         .format("cloudFiles")
+         .option("cloudFiles.format", "json")
+         .option("cloudFiles.schemaLocation", "/mnt/schema")
+         .load("/mnt/landing")
+)
+```
+
+Il est conçu pour les zones d’atterrissage cloud où de nouveaux fichiers arrivent régulièrement. Il conserve les métadonnées des fichiers découverts dans le checkpoint et peut utiliser soit le listing optimisé, soit des notifications ou événements du stockage cloud. citeturn0search1
+
+Auto Loader apporte notamment :
+
+- Une découverte plus efficace des fichiers à grande échelle.
+- La gestion de l’inférence et de l’évolution du schéma.
+- La possibilité de traiter uniquement les fichiers jamais vus.
+- La prise en charge de formats comme JSON, CSV, XML, Parquet, Avro, ORC et texte.
+- La possibilité d’effectuer une ingestion continue ou planifiée avec `availableNow`. citeturn0search1
+
+## Exemple pratique
+
+Supposons que des fichiers JSON arrivent dans ADLS :
+
+```text
+/raw/events/2026/10/05/file-001.json
+/raw/events/2026/10/05/file-002.json
+```
+
+Avec la source fichier Spark :
+
+```python
+spark.readStream \
+    .format("json") \
+    .schema(schema) \
+    .load("/raw/events")
+```
+
+Avec Auto Loader :
+
+```python
+spark.readStream \
+    .format("cloudFiles") \
+    .option("cloudFiles.format", "json") \
+    .option("cloudFiles.schemaLocation", "/checkpoints/events_schema") \
+    .load("/raw/events")
+```
+
+Les deux solutions traitent les nouveaux fichiers, mais Auto Loader est généralement préférable lorsque le répertoire contient beaucoup de fichiers ou lorsque le schéma peut évoluer.
+
+## Quand utiliser lequel ?
+
+Utilisez **Spark Structured Streaming seul** lorsque :
+
+- Vous consommez Kafka ou une autre source non basée sur des fichiers.
+- Vous avez peu de fichiers.
+- Vous contrôlez précisément le schéma.
+- Vous avez besoin d’un traitement streaming général.
+
+Utilisez **Auto Loader** lorsque :
+
+- Des fichiers arrivent continuellement dans S3, ADLS ou GCS.
+- Vous avez un grand nombre de fichiers.
+- Vous voulez gérer automatiquement les nouveaux fichiers.
+- Le schéma peut changer au fil du temps.
+- Vous construisez une ingestion Databricks vers Delta Lake.
+
+En résumé : **Spark Structured Streaming traite le flux ; Auto Loader facilite et optimise la découverte et l’ingestion des fichiers cloud**. Auto Loader n’est donc pas vraiment une alternative à Spark Streaming, mais plutôt une fonctionnalité qui l’utilise.
+
+
 
 Dans le cas des streaming sur un cloud storage(Lorsque de nouveaux fichiers de données arrivent en continu dans le stockage cloud s3, adsl, volumes) vous avez besoin d’un moyen efficace de les traiter sans suivre manuellement les fichiers qui ont été ingérés. Auto Loader résout ce problème.
 
