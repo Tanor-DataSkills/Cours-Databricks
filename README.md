@@ -131,3 +131,86 @@ Auto loader dispose 2 modes pour se tenir informer de l'arrivée d'un ou des nou
 Databricks recommande le mode de **file notification mode with file events enabled** sur votre **external location** dans le catalogue Unity. Avec les events de fichier, le Autoloader reçoit des notifications directement lorsque les fichiers arrivent, ce qui réduit la latence et les coûts d’API cloud.
 
 *Pour ingérer des données avec le Auto loader, vous utilisez le **cloudFiles format** avec **spark.readStream.** L’exemple suivant lit les fichiers JSON à partir d’Azure Data Lake Storage et les écrit dans une table de catalogue Unity :*
+
+
+**Ingesting data with the autoloader**
+
+Dans le cas des streaming sur un cloud storage(Lorsque de nouveaux fichiers de données arrivent en continu dans le stockage cloud s3, adsl, volumes) vous avez besoin d’un moyen efficace de les traiter sans suivre manuellement les fichiers qui ont été ingérés. Auto Loader résout ce problème.
+
+Auto loader surveille un emplacement de stockage cloud et traite de manière incrémentielle les nouveaux fichiers. 
+Auto loader traite d'abord les fichiers existants dans le répertoire, puis **surveille en permanence les nouveaux arrivées**. Il stocke les informations de progression et l'etat des fichiers dans un **CheckpointLocation**( emplacement de point de contrôle); ce qui lui permet de reprendre exactement à partir de l’endroit où il s’est arrêté s’il est interrompu.
+
+Auto loader dispose 2 modes pour se tenir informer de l'arrivée d'un ou des nouveaux fichiers dans le stockage cloud afin de traiter de manière incrémentielle tout en continu sans intervention manuelle:
+- **Directory listing mode :** Autoloader fait des scans réguliers dans les répertoires du cloud storage pour s'informer de l'arriver de nouveaux fichiers
+- **File notification mode :** Autoloader utilise les notifications cloud qui annoncent l'arrivée de nouveaux fichiers.Ce mode est plus efficace pour les charges de travail à grande échelle.
+
+
+
+
+
+Databricks recommande le mode de **file notification mode with file events enabled** sur votre **external location** dans le catalogue Unity. Avec les events de fichier, le Autoloader reçoit des notifications directement lorsque les fichiers arrivent, ce qui réduit la latence et les coûts d’API cloud.
+
+*Pour ingérer des données avec le Auto loader, vous utilisez le **cloudFiles format** avec **spark.readStream.** L’exemple suivant lit les fichiers JSON à partir d’Azure Data Lake Storage et les écrit dans une table de catalogue Unity :*
+
+>
+         base_path = "abfss://container@storage.dfs.core.windows.net/autoloader/orders"
+         schema_path = f"{base_path}/schema"
+         checkpoint_path = f"{base_path}/checkpoint"
+
+         (spark.readStream
+         .format("cloudFiles")
+         .option("cloudFiles.format", "json")
+         .option("cloudFiles.schemaLocation", schema_path)
+         .load("abfss://container@storage.dfs.core.windows.net/incoming/orders/")
+         .writeStream
+         .option("checkpointLocation", checkpoint_path)
+         .trigger(availableNow=True)
+         .toTable("sales.bronze.orders"))
+
+> [!WARNING]
+>
+- **spark.readStream:** Pour la lecture en streaming ou par lot des fichiers stockés dans un Cloud Object Storage
+
+- **.format("cloudFiles"):** La format("cloudFiles") méthode spécifie la nature du stockage(Cloud Object Storage); on a affaire à des cloudFiles.
+
+- **.option("cloudFiles.format", "csv"):** spécifie le type de fichier;
+
+- **.option("cloudFiles.schemaLocation", "/Volumes/retail_q/volumes/blob_source/_schema"):**
+
+- **.option("header", "true"):**
+
+- **.option("inferSchema", "true"):** n’est pas prise en charge pour les sources de streaming, car elle nécessite la lecture de l’ensemble du jeu de données.
+
+- **.load("/Volumes/retail_q/volumes/blob_source/transactions_source/"):**
+
+- **df.writeStream:**
+- 
+- **.outputMode("append"):** Le mode de sortie détermine quels enregistrements sont écrits :
+
+> [!NOTE]
+*append :* seules les nouvelles lignes sont écrites (par défaut pour la plupart des opérations)
+*Update :* les lignes modifiées sont enregistrées
+*complet :* toutes les lignes sont réécrites (utilisées avec des agrégations)
+
+- **.option("checkpointLocation", "/Volumes/retail_q/volumes/blob_source/_checkpoint"):** Le checkpointLocation ou l’emplacement du point de contrôle stocke les informations de progression, ce qui permet au flux de reprendre à partir de l’endroit où il s’est arrêté en cas d’interruption.
+
+- **.trigger(availableNow=True):**
+
+- **.toTable("retail_q.blob_bronze.transactions"):**
+
+> [!WARNING]
+> *Le code généré par genie ne doit pas être directement utilisé; il doit être réadapté car il peut contenir des imperfections:*
+>
+> On peut :
+
+ *1- Faire des **commentaires** explicites pour chaque étapes*
+
+*2- Configurer des **paths et f string function** pour éviter de taper des noms de repertoires longs passible à des erreurs*
+
+Ci-dessous un exemple de reading csv files avec Autoloader reformatté:
+
+<img width="983" height="573" alt="image" src="https://github.com/user-attachments/assets/07d19f59-5de2-489b-9bc7-e5fc00465407" />
+
+un exemple de writting csv files avec Autoloader reformatté:
+
+<img width="973" height="294" alt="image" src="https://github.com/user-attachments/assets/4bbbe3cb-efff-4c0e-976b-be3e9a7a91dc" />
