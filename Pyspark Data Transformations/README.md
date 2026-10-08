@@ -2,9 +2,10 @@
 
 Dans cette session nous aborderons l'un des sujets les plus important en data engineering, les transformations. Nous montrerons:
 
-## Ce qui se passe lorsqu'on utilise certaines opérations comme:select(), filter(), groupBy(), join(), orderBy(),... 
-
-## Pourquoi certaines transformations sont rapide à exécuter tandisque d'autres causent expensive data shuffles.
+> [!TIP]
+> Ce qui se passe lorsqu'on utilise certaines opérations comme:select(), filter(), groupBy(), join(), orderBy(),...
+> 
+> Pourquoi certaines transformations sont rapide à exécuter tandisque d'autres causent expensive data shuffles.
 
 
 ## 🔥Que va t-on apprendre
