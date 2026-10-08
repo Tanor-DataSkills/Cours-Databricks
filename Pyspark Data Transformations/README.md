@@ -1,6 +1,98 @@
-# PySpark Transformations, Narrow Transformations & Wide Transformations
+# 🚀PySpark Transformations, Narrow Transformations & Wide Transformations
 
-Ce projet est réalisé pour mettre en évidence la caapcité à développer un projet de data engineering de bout en bout avec Databricks en utilisant une approche appelée Lakeflow_Declarative_Pipeline. Pour bien montrer les fonctionnalité de Databricks on travaillera sur des données de retail.
+Dans cette session nous aborderons l'un des sujets les plus important en data engineering, les transformations. Nous montrerons:
+
+## Ce qui se passe lorsqu'on utilise certaines opérations comme:select(), filter(), groupBy(), join(), orderBy(),... 
+
+## Pourquoi certaines transformations sont rapide à exécuter tandisque d'autres causent expensive data shuffles.
+
+
+## 🔥Que va t-on apprendre
+
+
+## 1️⃣ PySpark Transformations
+
+✅ What is a Transformation?
+
+✅ Transformations vs Actions
+
+✅ Lazy Evaluation
+
+✅ How Spark builds a logical execution plan
+
+✅ Common DataFrame transformations
+
+✅ select()
+
+✅ filter()
+
+✅ withColumn()
+
+✅ union()
+
+✅ drop()
+
+✅ distinct()
+
+✅ groupBy()
+
+✅ join()
+
+✅ orderBy()
+
+✅ repartition()
+
+
+## 2️⃣ Narrow Transformations
+  
+✅ select()
+
+✅ filter()
+
+✅ map()
+
+✅ withColumn()
+
+✅ union()
+
+✅ coalesce()
+ 
+✅ groupBy()
+
+✅ join()
+
+✅ distinct()
+
+✅ orderBy()
+
+✅ sort()
+
+✅ repartition()
+
+Key idea:
+
+Data movement → Shuffle → More network and disk activity → Potential performance impact
+
+## 🧠 Narrow vs Wide — Simple Explanation
+
+Think of a company with three employees processing three piles of documents.
+ 
+ 
+Comprendre Narrow vs Wide Transformations permet de mieux comprendre:
+
+🔥 Why a Spark job is slow
+🔥 Why shuffle happens
+🔥 Why some joins are expensive
+🔥 Why groupBy() can be costly
+🔥 How partitions affect performance
+🔥 How Spark creates stages
+🔥 How to optimize Spark workloads
+🔥 How to troubleshoot Databricks jobs
+
+
+
+
+
 
 
 # 🗺️ Project Phases & Guide
